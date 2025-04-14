@@ -13,26 +13,25 @@ public class GameManager : MonoBehaviour
     public GameObject ClassicGamemodeUI;
     public GameObject CustomGamemodeUI;
     public GameObject CustomTemplateUI;
-    public GameObject CustomTemplateTableUI;
+    public GameObject GameTableUI;
     public GameObject RoleDescriptionUI;
+    public GameObject GameDescriptionUI;
+    public GameObject SettingsUI;
 
-    public Scrollbar scrollbar;
     public TMP_Text descriptionText;
     public TMP_Text goalText;
     public RectTransform goalRectTransform;
 
     private CustomRoleManager customRoleManager;
-
+    private SettingsManager settingsManager;
     void Start()
     {
         customRoleManager = GameObject.FindGameObjectWithTag("CustomRoleManager").GetComponent<CustomRoleManager>();
+        settingsManager = GameObject.FindGameObjectWithTag("SettingsManager").GetComponent<SettingsManager>();
     }
-
-
 
     void Update()
     {
-
         if (RoleDescriptionUI.activeInHierarchy)
         {
             // Get the height of the description text
@@ -40,10 +39,9 @@ public class GameManager : MonoBehaviour
 
             // Update the position of the goal text
             Vector2 goalPosition = goalRectTransform.anchoredPosition;
-            goalPosition.y = -descriptionHeight + 700f; // Adjust this value to add some padding between description and goal text
+            goalPosition.y = -descriptionHeight; // Adjust this value to add some padding between description and goal text
             goalRectTransform.anchoredPosition = goalPosition;
         }
-       
     }
 
     public void ChangeToGamemodeUI(int btnNum)
@@ -55,7 +53,11 @@ public class GameManager : MonoBehaviour
                 GamemodeUI.SetActive(true);
                 ClassicGamemodeUI.SetActive(false);
                 CustomGamemodeUI.SetActive(false);
+                customRoleManager.ClearTemplateButton();
+                customRoleManager.ClearTemplateTable();
                 RoleDescriptionUI.SetActive(false);
+                GameTableUI.SetActive(false);
+                SettingsUI.SetActive(false);
                 break;
             case 1:
                 GamemodeUI.SetActive(false);
@@ -69,32 +71,36 @@ public class GameManager : MonoBehaviour
                 GamemodeUI.SetActive(false);
                 RoleDescriptionUI.SetActive(true);
                 break;
-            //Custom Template active after Custom generating
             case 4:
                 CustomGamemodeUI.SetActive(false);
                 CustomTemplateUI.SetActive(true);
                 break;
             case 5:
-                customRoleManager.ClearTemplate();
+                customRoleManager.ClearTemplateButton();
                 CustomGamemodeUI.SetActive(true);
                 CustomTemplateUI.SetActive(false);
                 break;
-            case 6:
+            case 8:
+                ClassicGamemodeUI.SetActive(false);
                 CustomTemplateUI.SetActive(false);
-                CustomTemplateTableUI.SetActive(true);
+                GameTableUI.SetActive(true);
                 break;
-            case 7:
-                CustomTemplateUI.SetActive(true);
-                CustomTemplateTableUI.SetActive(false);
+            case 10:
+                GameDescriptionUI.SetActive(true);
+                GamemodeUI.SetActive(false);
+                break;
+            case 11:
+                GamemodeUI.SetActive(true);
+                GameDescriptionUI.SetActive(false);
+                break;
+            case 12:
+                GamemodeUI.SetActive(false);
+                SettingsUI.SetActive(true);
                 break;
             default:
                 // code block
                 break;
         }
-
-
     }
-
-
 
 }

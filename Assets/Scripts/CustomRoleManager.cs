@@ -1,34 +1,45 @@
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro; // Import TextMeshPro namespace
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Import TextMeshPro namespace
-using System.Linq;
 
 public class CustomRoleManager : MonoBehaviour
 {
-    public TMP_InputField inputField; // Change to TMP_InputField if using TextMeshPro
+    public TMP_InputField inputField;
     public Button generateRolesButton;
     public GameObject roleCustomizingScrollViewContent;
-    public GameObject finalCustomPlayerScrollViewContent;
     public GameObject roleTemplatePrefab;
     public GameObject nameRolePrefab;
     public TMP_Text rolesLeftToAssignCountTXT;
+    private string errorMessageTXT;
 
     private Dictionary<string, int> roleCountsDictionary = new Dictionary<string, int>();
     private int totalRolesCount;
-    private List<GameObject> buttonsList = new List<GameObject>();
 
-    //Lista u koja glumi preset za custom game (uzima role od broja role koje je odredio player)
+    // Lists for storing roles and names
     public List<string> rolesToGivePlayers = new List<string>();
     public List<string> randomizedRolesToGivePlayers = new List<string>();
     public List<string> namesList;
 
+    public List<GameObject> buttonsList = new List<GameObject>();
+    private List<GameObject> roleEntries = new List<GameObject>();
+    private List<GameObject> originalOrder = new List<GameObject>();
+    private List<string> recurringNamesList = new List<string>();
+    private bool checkForErrors = false;
 
+    private PopupManager popupManager;
+    private GameManager gameManager;
+    private PhaseManager phaseManager;
 
     void Start()
     {
         generateRolesButton.onClick.AddListener(GenerateRoles);
+        popupManager = GameObject.FindGameObjectWithTag("PopupManager").GetComponent<PopupManager>();
+        gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
+        phaseManager = GameObject.FindGameObjectWithTag("PhaseManager").GetComponent<PhaseManager>();
     }
 
     void GenerateRoles()
@@ -39,61 +50,113 @@ public class CustomRoleManager : MonoBehaviour
             Destroy(child.gameObject);
         }
 
+        recurringNamesList.Clear();
+
         // Get names from the input field
         string inputText = inputField.text;
         namesList = inputText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries).ToList();
         totalRolesCount = namesList.Count;
-        Debug.Log("Total role count: " + totalRolesCount);
 
-        
-
-        // Define roles (for example purposes)
-        List<string> roles = new List<string>();
-
-        foreach (string role in Role.roleDictionary.Keys)
+        // Check for duplicate names
+        for (int i = 0; i < namesList.Count; i++)
         {
-            roles.Add(role);
+            for (int j = 0; j < namesList.Count; j++)
+            {
+                if (i != j && namesList[i].Equals(namesList[j]))
+                {
+                    recurringNamesList.Add(namesList[i]);
+                }
+            }
         }
 
-        for (int i = 0; i < roles.Count; i++)
+        recurringNamesList = recurringNamesList.Distinct().ToList();
+
+        if (recurringNamesList.Count > 0)
         {
-            string role = roles[i]; // Capture the role name in a local variable
-
-            // Instantiate role template
-            GameObject newRoleEntry = Instantiate(roleTemplatePrefab, roleCustomizingScrollViewContent.transform);
-
-            // Get role name text component and set text
-            TMP_Text roleNameText = newRoleEntry.transform.Find("RoleNameText").GetComponent<TMP_Text>();
-            roleNameText.text = role;
-
-            // Initialize role count to 1
-            roleCountsDictionary[role] = 0;
-
-            // Get count text component and set text
-            TMP_Text roleCountText = newRoleEntry.transform.Find("RoleCountText").GetComponent<TMP_Text>();
-            roleCountText.text = roleCountsDictionary[role].ToString();
-
-            // Get buttons and assign click listeners
-            Button incrementButton = newRoleEntry.transform.Find("IncrementButton").GetComponent<Button>();
-            Button decrementButton = newRoleEntry.transform.Find("DecrementButton").GetComponent<Button>();
-
-            // Assign role name to buttons using local variables to avoid closure issues
-            incrementButton.onClick.AddListener(() => IncrementRoleCount(role, roleCountText));
-            decrementButton.onClick.AddListener(() => DecrementRoleCount(role, roleCountText));
+            checkForErrors = true;
+            errorMessageTXT = "Duplicate names found: " + string.Join(", ", recurringNamesList);
+            popupManager.ShowCustomError(errorMessageTXT);
+        }
+        else
+        {
+            checkForErrors = false;
         }
 
+        if (!checkForErrors)
+        {
+            List<string> roles = new List<string>(Role.roleDictionary.Keys);
 
-        buttonsList = GameObject.FindGameObjectsWithTag("IncBtn").ToList();
+            foreach (string role in roles)
+            {
+                GameObject newRoleEntry = Instantiate(roleTemplatePrefab, roleCustomizingScrollViewContent.transform);
+                TMP_Text roleNameText = newRoleEntry.transform.Find("RoleNameText").GetComponent<TMP_Text>();
+
+                Role selectedRole = Role.GetRole(role);
+                Color32 roleColor = selectedRole.RoleColor;
+                string hexColor = ColorUtility.ToHtmlStringRGB(roleColor);
+
+                roleNameText.text = $"<color=#{hexColor}>{role}</color>";
+
+                roleCountsDictionary[role] = 0;
+                TMP_Text roleCountText = newRoleEntry.transform.Find("RoleCountText").GetComponent<TMP_Text>();
+                roleCountText.text = roleCountsDictionary[role].ToString();
+
+                Button incrementButton = newRoleEntry.transform.Find("IncrementButton").GetComponent<Button>();
+                Button decrementButton = newRoleEntry.transform.Find("DecrementButton").GetComponent<Button>();
+
+                incrementButton.onClick.AddListener(() => IncrementRoleCount(role, roleCountText));
+                decrementButton.onClick.AddListener(() => DecrementRoleCount(role, roleCountText));
+            }
+
+            // Start the coroutine to wait before fetching the buttons
+            StartCoroutine(WaitAndFetchButtons());
+
+            // Change to the next UI screen
+            gameManager.ChangeToGamemodeUI(4);
+        }
+    }
+
+    IEnumerator WaitAndFetchButtons()
+    {
+        Canvas.ForceUpdateCanvases();
+        yield return new WaitForEndOfFrame();
+
+        // Continuously check until buttons are found
+        while (buttonsList.Count == 0)
+        {
+            buttonsList = roleCustomizingScrollViewContent.GetComponentsInChildren<Button>(true)
+                .Where(button => button.CompareTag("IncBtn"))
+                .Select(button => button.gameObject)
+                .ToList();
+
+            yield return null; // Wait for the next frame
+        }
 
         UpdateRemainingRolesText();
     }
 
+
     void IncrementRoleCount(string role, TMP_Text roleCountText)
     {
+        int assignedRolesCount = 0;
+        foreach (var count in roleCountsDictionary.Values)
+        {
+            assignedRolesCount += count;
+        }
 
-        roleCountsDictionary[role]++;
-        roleCountText.text = roleCountsDictionary[role].ToString();
-        UpdateRemainingRolesText();
+        int remainingRoles = totalRolesCount - assignedRolesCount;
+
+        if (remainingRoles > 0)
+        {
+            roleCountsDictionary[role]++;
+            roleCountText.text = roleCountsDictionary[role].ToString();
+            UpdateRemainingRolesText();
+        }
+        else
+        {
+            Debug.LogWarning("No remaining roles to assign.");
+            UpdateRemainingRolesText();
+        }
     }
 
     void DecrementRoleCount(string role, TMP_Text roleCountText)
@@ -115,102 +178,127 @@ public class CustomRoleManager : MonoBehaviour
         }
         int remainingRoles = totalRolesCount - assignedRolesCount;
 
-        
-        if (remainingRoles == 0) { 
+        rolesLeftToAssignCountTXT.text = "Remaining: " + remainingRoles.ToString();
 
-        foreach (var button in buttonsList)
-        {
-            
-            button.gameObject.GetComponent<Button>().interactable = false;
-            GameObject.FindGameObjectWithTag("RandomizeBtn").GetComponent<Button>().interactable = true;
-
-        }
-
-        }
-        else 
+        if (remainingRoles == 0)
         {
             foreach (var button in buttonsList)
             {
-
-                button.gameObject.GetComponent<Button>().interactable = true;
+                button.GetComponent<Button>().interactable = false;
+                GameObject.FindGameObjectWithTag("RandomizeBtn").GetComponent<Button>().interactable = true;
+            }
+        }
+        else
+        {
+            foreach (var button in buttonsList)
+            {
+                button.GetComponent<Button>().interactable = true;
                 GameObject.FindGameObjectWithTag("RandomizeBtn").GetComponent<Button>().interactable = false;
             }
         }
-
-        rolesLeftToAssignCountTXT.text = "Remaining: " + remainingRoles.ToString();
     }
 
 
-
-    public void ClearTemplate() {
-
-        buttonsList.Clear();
-        // Clear existing content
-        foreach (Transform child in roleCustomizingScrollViewContent.transform)
-        {
-            Destroy(child.gameObject);
-        }
-
-    }
-
-
+    //PART OF THE CODE WHERE THE ROLES ARE RANDOMIZED AND GIVEN TO PEOPLE AFTER THE USER HAS SET UP WHICH ROLES THEY WANNA USE
     public void RandomizeRoles()
     {
         rolesToGivePlayers.Clear();
+        roleEntries.Clear();
+        originalOrder.Clear();
 
-        foreach(var key in roleCountsDictionary.Keys)
+        foreach (var key in roleCountsDictionary.Keys)
         {
-            for(int i = 0; i < roleCountsDictionary[key]; i++)
+            for (int i = 0; i < roleCountsDictionary[key]; i++)
             {
                 rolesToGivePlayers.Add(key);
             }
-
-
-        }
-
-        foreach (var item in rolesToGivePlayers)
-        {
-            Debug.Log("Roles given to player: " + item);
         }
 
         randomizedRolesToGivePlayers = ShuffleCustomPlayerRoles(rolesToGivePlayers);
 
-        foreach (var item in randomizedRolesToGivePlayers)
-        {
-            Debug.Log("Randomized roles given to player: " + item);
-        }
-
-        //For each that assignes roles to each name
-        int roleIndex = 0;
-
-        // Clear existing content
-        foreach (Transform child in finalCustomPlayerScrollViewContent.transform)
-        {
-            Destroy(child.gameObject);
-        }
-
+        // For each name, assign a role
+        int fetchedRoleIndex = 0;
+        Dictionary<string, Role> pairedPlayerNameWithRoleDictionary = new Dictionary<string, Role>();
 
         foreach (string name in namesList)
         {
-            string role = randomizedRolesToGivePlayers[roleIndex];
-
+            string role = randomizedRolesToGivePlayers[fetchedRoleIndex];
             Role selectedRole = Role.GetRole(role);
-            Color32 roleColor = selectedRole.RoleColor;
-            string hexColor = UnityEngine.ColorUtility.ToHtmlStringRGB(roleColor);
-
-            roleIndex++;
-            GameObject newEntry = Instantiate(nameRolePrefab, finalCustomPlayerScrollViewContent.transform);
-            TMP_Text entryText = newEntry.GetComponent<TMP_Text>();
-            if (entryText != null)
-            {
-                entryText.text = $"{name}: <color=#{hexColor}>{role}</color>";
-                Debug.Log(entryText.text);
-            }
+            pairedPlayerNameWithRoleDictionary.Add(name, selectedRole);
+            fetchedRoleIndex++;
         }
 
+        // Sort dictionary by faction and role name
+        //var pairedPlayerNameWithRoleList = pairedPlayerNameWithRoleDictionary.ToList();
+        //pairedPlayerNameWithRoleList.Sort((pair1, pair2) => pair1.Value.RoleFaction.CompareTo(pair2.Value.RoleFaction));
+        //pairedPlayerNameWithRoleList.Sort((pair1, pair2) => pair1.Value.RoleName.CompareTo(pair2.Value.RoleName));
+
+        var dictionarySortedByRoleFactionAndName = pairedPlayerNameWithRoleDictionary
+        .OrderBy(x => x.Value.RoleFaction)
+        .ThenBy(x => x.Value.RoleName)
+        .ToDictionary(x => x.Key, x => x.Value);
+
+        // Final assignment and adding to ScrollView
+        foreach (var pair in dictionarySortedByRoleFactionAndName)
+        {
+            string role = pair.Value.RoleName;
+            Role selectedRole = Role.GetRole(role);
+            Color32 roleColor = selectedRole.RoleColor;
+            string hexColor = ColorUtility.ToHtmlStringRGB(roleColor);
+
+            // Instantiate role template
+            GameObject newRoleEntry = Instantiate(nameRolePrefab, phaseManager.alivePlayerScrollViewContent.transform);
+
+            // Get role name text component and set text
+            TMP_Text roleNameText = newRoleEntry.transform.Find("PlayerRolePairTXT").GetComponent<TMP_Text>();
+            roleNameText.text = $"{pair.Key}: <color=#{hexColor}>{role}</color>";
+
+            Button sendToGraveyardOrBackBTN = newRoleEntry.transform.Find("ChangeStateOfDeathBTN").GetComponent<Button>();
+            sendToGraveyardOrBackBTN.GetComponentInChildren<TMP_Text>().text = "X";
+            sendToGraveyardOrBackBTN.onClick.AddListener(() => MoveRoleEntry(newRoleEntry));
+
+            roleEntries.Add(newRoleEntry);
+            originalOrder.Add(newRoleEntry);
+        }
+    }
+
+    void MoveRoleEntry(GameObject roleEntry)
+    {
+        if (roleEntry.transform.parent == phaseManager.alivePlayerScrollViewContent.transform)
+        {
+            roleEntry.transform.SetParent(phaseManager.graveyardScrollViewContent.transform);
+            roleEntry.transform.Find("ChangeStateOfDeathBTN").GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "↑";
+            if (phaseManager.currentPhase == PhaseManager.Phase.Voting)
+            {
+                phaseManager.CalculateVotesNeeded();
+            }
+            phaseManager.UpdateAliveDeadPlayerCount();
+        }
+        else
+        {
+            roleEntry.transform.SetParent(phaseManager.alivePlayerScrollViewContent.transform);
+            roleEntry.transform.Find("ChangeStateOfDeathBTN").GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "X";
+            if (phaseManager.currentPhase == PhaseManager.Phase.Voting)
+            {
+                phaseManager.CalculateVotesNeeded();
+            }
+            phaseManager.UpdateAliveDeadPlayerCount();
+            SortToOriginalOrder();
+        }
     }
 
 
+    //Sorting and randomizing algorithms
+    void SortToOriginalOrder()
+    {
+        foreach (var roleEntry in originalOrder)
+        {
+            if (roleEntry.transform.parent == phaseManager.alivePlayerScrollViewContent.transform)
+            {
+                roleEntry.transform.SetSiblingIndex(originalOrder.IndexOf(roleEntry));
+            }
+        }
+    }
 
     private static System.Random rng = new System.Random();
     public static List<string> ShuffleCustomPlayerRoles(List<string> list)
@@ -228,7 +316,33 @@ public class CustomRoleManager : MonoBehaviour
         return list;
     }
 
+    //Clear everything
+    public void ClearTemplateButton()
+    {
 
+        buttonsList.Clear();
+        // Clear existing content
+        foreach (Transform child in roleCustomizingScrollViewContent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+    }
+
+    public void ClearTemplateTable()
+    {
+        // Clear existing content
+        foreach (Transform child in phaseManager.alivePlayerScrollViewContent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        foreach (Transform child in phaseManager.graveyardScrollViewContent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+    }
 
     //public void ReadDictionary()
     //{

@@ -15,6 +15,8 @@ public class RoleManager : MonoBehaviour
     public TMP_Text roleDescTXT;
     public TMP_Text roleGoalTXT;
 
+    public Scrollbar roleDescScrollBar;
+
     private Role roleScript;
     private GameManager gameManager;
     void Start()
@@ -43,7 +45,7 @@ public class RoleManager : MonoBehaviour
 
     void DropdownValueChanged(TMP_Dropdown dropdown)
     {
-        gameManager.scrollbar.value = 1f;
+        roleDescScrollBar.value = 1f;
 
         string selectedRoleName = dropdown.options[dropdown.value].text;
 
@@ -64,8 +66,8 @@ public class RoleManager : MonoBehaviour
                 break;
 
             case Role.RoleTypeEnum.Neutral:
-                Color32 colorWhite = new Color32(255, 255, 255, 255);
-                roleFactionTXT.color = colorWhite;
+                Color32 colorGrayish = new Color32(150, 150, 150, 255);
+                roleFactionTXT.color = colorGrayish;
                 break;
             default:
                 // code block
