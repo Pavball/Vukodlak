@@ -1,8 +1,8 @@
 public class JsonRoleReader
 {
-    public static List<Role> LoadRolesFromFile(string filePath)
+    public static List<Role> LoadRolesFromFile()
     {
-        private string filePath = "";
+        private string filePath = Path.Combine(Application.persistentDataPath, "Roles.json");
 
         if (!File.Exists(filePath))
         {
@@ -12,7 +12,6 @@ public class JsonRoleReader
 
         string json = File.ReadAllText(filePath);
 
-        // Custom color converter needed for Color32
         var settings = new JsonSerializerSettings
         {
             Converters = new List<JsonConverter> { new Color32Converter() }

@@ -65,7 +65,7 @@ public class Role : MonoBehaviour
             {"Jester", new Role("Jester", "Evil Neutral", "Get yourself lynched by any means necessary.", "Goal: You win on your own. Lynch yourself.", RoleTypeEnum.Neutral, colorPinkysh, false)}
         };
         var jsonRoles = JsonRoleReader.LoadRolesFromFile();
-        roleDictionary.Add(jsonRoles);
+        roleDictionary.Add(CheckDuplicateRoles(jsonRoles, roleDictionary));
     }
 
     // Dictionary to store role objects
@@ -157,6 +157,14 @@ public class Role : MonoBehaviour
         }
     }
 
-
+    private List<Role> CheckDuplicateRoles(List<Role> jsonRoles, Dictionary<string, Role> preLoadedRoles)
+    {
+        foreach (var role in jsonRoles) {
+            if (preLoadedRoles.Contains(role.Name))
+            {
+                jsonRoles.Remove(role);
+            }
+        }
+    }
 
 }
