@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using Unity.VisualScripting;
 using UnityEngine;
 
+[Serializable]
 public class Role : MonoBehaviour
 {
     public enum RoleTypeEnum
@@ -63,6 +64,8 @@ public class Role : MonoBehaviour
             {"Serial Killer", new Role("Serial Killer", "Evil Killing", "Can kill one person each night. Is immune to werewolf attack.", "Goal: You win on your own. Lynch every other faction.", RoleTypeEnum.Neutral, colorDarkBlue, false)},
             {"Jester", new Role("Jester", "Evil Neutral", "Get yourself lynched by any means necessary.", "Goal: You win on your own. Lynch yourself.", RoleTypeEnum.Neutral, colorPinkysh, false)}
         };
+        var jsonRoles = JsonRoleReader.LoadRolesFromFile();
+        roleDictionary.Add(jsonRoles);
     }
 
     // Dictionary to store role objects
