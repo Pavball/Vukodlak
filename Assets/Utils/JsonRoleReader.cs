@@ -2,12 +2,12 @@ public class JsonRoleReader
 {
     public static List<Role> LoadRolesFromFile()
     {
-        private string filePath = Path.Combine(Application.persistentDataPath, "Roles.json");
+        private string filePath = Path.Combine(Application.persistentDataPath, "/Roles.json");
 
         if (!File.Exists(filePath))
         {
-            Debug.LogError($"File not found: {filePath}");
-            return new List<Role>();
+            FileStream file = File.Open(Application.persistentDataPath + "/Roles.json", FileMode.Create);
+            file.Close();
         }
 
         string json = File.ReadAllText(filePath);
