@@ -2,7 +2,7 @@ public class JsonRoleReader
 {
     public static List<Role> LoadRolesFromFile()
     {
-        private string filePath = Path.Combine(Application.persistentDataPath, "/Roles.json");
+        private string filePath = Path.Combine(Application.persistentDataPath, "Roles.json");
 
         if (!File.Exists(filePath))
         {
