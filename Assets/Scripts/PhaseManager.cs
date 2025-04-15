@@ -2,6 +2,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
+using Unity.Mathematics;
+using System;
 
 public class PhaseManager : MonoBehaviour
 {
@@ -13,7 +15,7 @@ public class PhaseManager : MonoBehaviour
     public int explanationDuration = 15; // Duration for explanation period
     private int explanationTimeRemaining;
 
-    private int votesNeededCounter = 0;
+    private double votesNeededCounter = 0;
     private int dayCounter = 0;
     private int nightCounter = 0;
     public int timeRemaining;
@@ -317,7 +319,7 @@ public class PhaseManager : MonoBehaviour
 
         Transform content = alivePlayerScrollViewContent.transform;
 
-        votesNeededCounter = Mathf.RoundToInt(content.childCount / 2);
+        votesNeededCounter = Math.Ceiling((double)content.childCount / 2);
         votesNeededTXT.text = "Votes needed: " + votesNeededCounter.ToString();
     }
 
