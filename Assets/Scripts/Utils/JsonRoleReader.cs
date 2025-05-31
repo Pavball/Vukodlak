@@ -1,8 +1,13 @@
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
 public class JsonRoleReader
 {
     public static List<Role> LoadRolesFromFile()
     {
-        private string filePath = Path.Combine(Application.persistentDataPath, "Roles.json");
+        var filePath = Path.Combine(Application.persistentDataPath, "Roles.json");
+
 
         if (!File.Exists(filePath))
         {
@@ -10,14 +15,10 @@ public class JsonRoleReader
             file.Close();
         }
 
-        string json = File.ReadAllText(filePath);
-
-        var settings = new JsonSerializerSettings
-        {
-            Converters = new List<JsonConverter> { new Color32Converter() }
-        };
+        var json = File.ReadAllText(filePath);
 
         List<Role> roles = JsonConvert.DeserializeObject<List<Role>>(json, settings);
+
         return roles;
     }
 }

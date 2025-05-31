@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -64,8 +65,12 @@ public class Role : MonoBehaviour
             {"Serial Killer", new Role("Serial Killer", "Evil Killing", "Can kill one person each night. Is immune to werewolf attack.", "Goal: You win on your own. Lynch every other faction.", RoleTypeEnum.Neutral, colorDarkBlue, false)},
             {"Jester", new Role("Jester", "Evil Neutral", "Get yourself lynched by any means necessary.", "Goal: You win on your own. Lynch yourself.", RoleTypeEnum.Neutral, colorPinkysh, false)}
         };
-        var jsonRoles = JsonRoleReader.LoadRolesFromFile();
-        roleDictionary.Add(CheckDuplicateRoles(jsonRoles, roleDictionary));
+        var jsonRolesFromFile = JsonRoleReader.LoadRolesFromFile();
+        var jsonRoles = CheckDuplicateRoles(jsonRolesFromFile, roleDictionary);
+        foreach (var role in jsonRoles)
+        {
+            roleDictionary.Add(role.RoleName, role);
+        }
     }
 
     // Dictionary to store role objects
@@ -157,14 +162,15 @@ public class Role : MonoBehaviour
         }
     }
 
-    private List<Role> CheckDuplicateRoles(List<Role> jsonRoles, Dictionary<string, Role> preLoadedRoles)
+    private static List<Role> CheckDuplicateRoles(List<Role> jsonRolesFromFile, Dictionary<string, Role> preLoadedRoles)
     {
-        foreach (var role in jsonRoles) {
-            if (preLoadedRoles.Contains(role.Name))
+        foreach (var role in jsonRolesFromFile) {
+            if (preLoadedRoles.ContainsKey(role.RoleName))
             {
-                jsonRoles.Remove(role);
+                jsonRolesFromFile.Remove(role);
             }
         }
+        return jsonRolesFromFile;
     }
 
 }
