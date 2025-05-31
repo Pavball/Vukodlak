@@ -1,0 +1,16 @@
+Name
+Faction
+Description
+Goal
+Type
+Color
+IsDead
+##
+Medium
+Town
+You go to the toilet and talk to the dead
+Eliminate all threats to the Town.
+Good
+61,217,156,255
+false
+##

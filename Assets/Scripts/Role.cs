@@ -65,7 +65,7 @@ public class Role : MonoBehaviour
             {"Serial Killer", new Role("Serial Killer", "Evil Killing", "Can kill one person each night. Is immune to werewolf attack.", "Goal: You win on your own. Lynch every other faction.", RoleTypeEnum.Neutral, colorDarkBlue, false)},
             {"Jester", new Role("Jester", "Evil Neutral", "Get yourself lynched by any means necessary.", "Goal: You win on your own. Lynch yourself.", RoleTypeEnum.Neutral, colorPinkysh, false)}
         };
-        var jsonRolesFromFile = JsonRoleReader.LoadRolesFromFile();
+        var jsonRolesFromFile = DiskRoleLoader.LoadRolesFromFile();
         var jsonRoles = CheckDuplicateRoles(jsonRolesFromFile, roleDictionary);
         foreach (var role in jsonRoles)
         {
