@@ -149,8 +149,9 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 1.0.4
-  preloadedAssets: []
+  bundleVersion: 1.0.5
+  preloadedAssets:
+  - {fileID: 4107877998232152299, guid: eeb6b429a03a57f4fa4ae8aeb3733b94, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   xboxOneDisableKinectGpuReservation: 1
@@ -181,7 +182,7 @@ PlayerSettings:
     iPhone: 0
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
-  AndroidBundleVersionCode: 1
+  AndroidBundleVersionCode: 2
   AndroidMinSdkVersion: 26
   AndroidTargetSdkVersion: 36
   AndroidPreferredInstallLocation: 1
@@ -313,32 +314,44 @@ PlayerSettings:
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: Android
     m_Icons:
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: 9a189eb53b949a74bab27757aa9c19bc, type: 3}
+      - {fileID: 2800000, guid: 02054e3dc8b720f4291e5f32e0b1581d, type: 3}
       m_Width: 432
       m_Height: 432
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: 9a189eb53b949a74bab27757aa9c19bc, type: 3}
+      - {fileID: 2800000, guid: 02054e3dc8b720f4291e5f32e0b1581d, type: 3}
       m_Width: 324
       m_Height: 324
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: 9a189eb53b949a74bab27757aa9c19bc, type: 3}
+      - {fileID: 2800000, guid: 02054e3dc8b720f4291e5f32e0b1581d, type: 3}
       m_Width: 216
       m_Height: 216
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: 9a189eb53b949a74bab27757aa9c19bc, type: 3}
+      - {fileID: 2800000, guid: 02054e3dc8b720f4291e5f32e0b1581d, type: 3}
       m_Width: 162
       m_Height: 162
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: 9a189eb53b949a74bab27757aa9c19bc, type: 3}
+      - {fileID: 2800000, guid: 02054e3dc8b720f4291e5f32e0b1581d, type: 3}
       m_Width: 108
       m_Height: 108
       m_Kind: 2
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: 9a189eb53b949a74bab27757aa9c19bc, type: 3}
+      - {fileID: 2800000, guid: 02054e3dc8b720f4291e5f32e0b1581d, type: 3}
       m_Width: 81
       m_Height: 81
       m_Kind: 2
