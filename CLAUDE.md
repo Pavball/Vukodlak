@@ -77,7 +77,7 @@ Naming oddities to keep as they are unless deliberately migrating:
 ## Repository state
 
 - **`Assets/TextMesh Pro/Examples & Extras` isn't in git.** Nothing in the project uses it, so keep it out of commits.
-- **Android build status:** a debug-signed APK builds on Unity 6 in about 13 minutes on a clean build. It hasn't been run on a phone, and a signed build hasn't been tried.
+- **Android build status:** a debug-signed APK builds on Unity 6 in about 13 minutes on a clean build, and was tested on an Android 16 phone with both game modes working. A build signed with `user.keystore` hasn't been tried.
 - **`user.keystore` is tracked in git.** Never print, move, or modify it.
 - **`.roles.txt` at the repo root is an empty tracked file.** The loader doesn't use it.
 
