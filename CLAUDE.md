@@ -5,7 +5,7 @@ A moderator's companion app for a real-life, Town of Salem-style social deductio
 ## Project facts
 
 - **Engine:** Unity 6000.6.8f1, Built-in Render Pipeline, legacy Input Manager (`StandaloneInputModule`).
-- **Target platform:** Android (`com.ribcageharmony.vukodlak`, min SDK 26, IL2CPP). The editor's active build target is currently StandaloneWindows64.
+- **Target platform:** Android (`com.ribcageharmony.vukodlak`, min SDK 26, target SDK 36, IL2CPP). The project uses Unity's default Gradle templates and manifest, so there is no `Assets/Plugins/Android` folder.
 - **UI:** uGUI with TextMesh Pro.
 - **Scene:** only `Assets/Scenes/SampleScene.unity`. All UI lives here as panels that are switched on and off.
 - **Remote:** `https://github.com/Pavball/Vukodlak.git`, default branch `main`.
@@ -77,7 +77,7 @@ Naming oddities to keep as they are unless deliberately migrating:
 ## Repository state
 
 - **`Assets/TextMesh Pro/Examples & Extras` isn't in git.** Nothing in the project uses it, so keep it out of commits.
-- **Android Gradle templates predate the upgrade:** `Assets/Plugins/Android/*.gradle` hardcode compile SDK 33 and target SDK 33, while Player Settings says target 32. Android builds on Unity 6 haven't been verified.
+- **Android build status:** a debug-signed APK builds on Unity 6 in about 13 minutes on a clean build. It hasn't been run on a phone, and a signed build hasn't been tried.
 - **`user.keystore` is tracked in git.** Never print, move, or modify it.
 - **`.roles.txt` at the repo root is an empty tracked file.** The loader doesn't use it.
 
