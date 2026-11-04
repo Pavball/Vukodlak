@@ -32,7 +32,8 @@ public class DiskRoleLoader
         {
             if (roleList[i].Length >= 7)
             {
-                var item = roleList[i].Split(Environment.NewLine);
+                // Accept any line ending: git and other editors can change them in roles.txt
+                var item = roleList[i].Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 var role = new Role(item[1], item[2], item[3], item[4], getRoleType(item[5]), getColor(item[6]), getIsDead(item[7]));
                 roles.Add(role);
             }
