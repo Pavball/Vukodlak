@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class CustomRoleManager : MonoBehaviour
 {
+    private const int MinPlayers = 3;
+
     public TMP_InputField inputField;
     public Button generateRolesButton;
     public GameObject roleCustomizingScrollViewContent;
@@ -50,36 +52,30 @@ public class CustomRoleManager : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        recurringNamesList.Clear();
-
         // Get names from the input field
-        string inputText = inputField.text;
-        namesList = inputText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+        namesList = PlayerNames.Parse(inputField.text);
         totalRolesCount = namesList.Count;
 
-        // Check for duplicate names
-        for (int i = 0; i < namesList.Count; i++)
-        {
-            for (int j = 0; j < namesList.Count; j++)
-            {
-                if (i != j && namesList[i].Equals(namesList[j]))
-                {
-                    recurringNamesList.Add(namesList[i]);
-                }
-            }
-        }
+        // Check for too few players and duplicate names
+        recurringNamesList = PlayerNames.FindDuplicates(namesList);
+        List<string> errors = new List<string>();
 
-        recurringNamesList = recurringNamesList.Distinct().ToList();
+        if (namesList.Count < MinPlayers)
+        {
+            errors.Add("Custom games need at least " + MinPlayers + " players.");
+        }
 
         if (recurringNamesList.Count > 0)
         {
-            checkForErrors = true;
-            errorMessageTXT = "Duplicate names found: " + string.Join(", ", recurringNamesList);
-            popupManager.ShowCustomError(errorMessageTXT);
+            errors.Add("Duplicate names found: " + string.Join(", ", recurringNamesList));
         }
-        else
+
+        checkForErrors = errors.Count > 0;
+
+        if (checkForErrors)
         {
-            checkForErrors = false;
+            errorMessageTXT = string.Join("\r\n", errors);
+            popupManager.ShowCustomError(errorMessageTXT);
         }
 
         if (!checkForErrors)
@@ -214,6 +210,15 @@ public class CustomRoleManager : MonoBehaviour
             }
         }
 
+        // The button is only enabled once every player has a role, so this shouldn't happen.
+        // The error popup lives on the previous screen, so re-sync the button instead.
+        if (rolesToGivePlayers.Count != namesList.Count)
+        {
+            Debug.LogWarning("Role count (" + rolesToGivePlayers.Count + ") doesn't match player count (" + namesList.Count + ").");
+            UpdateRemainingRolesText();
+            return;
+        }
+
         randomizedRolesToGivePlayers = ShuffleCustomPlayerRoles(rolesToGivePlayers);
 
         // For each name, assign a role
@@ -260,6 +265,9 @@ public class CustomRoleManager : MonoBehaviour
             roleEntries.Add(newRoleEntry);
             originalOrder.Add(newRoleEntry);
         }
+
+        gameManager.ChangeToGamemodeUI(8);
+        phaseManager.InitializeGame();
     }
 
     void MoveRoleEntry(GameObject roleEntry)
@@ -344,23 +352,4 @@ public class CustomRoleManager : MonoBehaviour
 
     }
 
-    //public void ReadDictionary()
-    //{
-    //    int i = 1;
-    //    foreach(string role in roleCountsDictionary.Keys)
-    //    {
-
-    //        Debug.Log(i + "# Role key: " + role);
-    //        i++;
-    //    }
-
-    //    int j = 1;
-    //    foreach (int role in roleCountsDictionary.Values)
-    //    {
-
-    //        Debug.Log(j + "# Role value: " + role);
-    //        j++;
-    //    }
-
-    //}
 }

@@ -35,37 +35,19 @@ public class RoleDistribution : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        foreach (Transform child in phaseManager.alivePlayerScrollViewContent.transform)
+        foreach (Transform child in phaseManager.graveyardScrollViewContent.transform)
         {
             Destroy(child.gameObject);
         }
 
         roleEntries.Clear();
         originalOrder.Clear();
-        recurringNamesList.Clear();
         errorMessageTXT = string.Empty;
 
-        string inputText = nameInputField.text;
-        string[] namesArray = inputText.ToLower().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-        List<string> namesList = namesArray.ToList();
+        List<string> namesList = PlayerNames.Parse(nameInputField.text);
 
         //Check if there are same names
-        for (int i = 0; i < namesList.Count; i++)
-        {
-            for (int j = 0; j < namesList.Count; j++)
-            {
-                if (i != j)
-                {
-                    if (namesList[i].Equals(namesList[j]))
-                    {
-                        recurringNamesList.Add(namesList[i]);
-                    }
-                }
-            }
-        }
-
-        //Distinct the same names
-        recurringNamesList = recurringNamesList.Distinct().ToList();
+        recurringNamesList = PlayerNames.FindDuplicates(namesList);
 
         //Check For Errors (Recurring Names or Bad Player Count)
         if (recurringNamesList.Count == 0 && namesList.Count > 9 && namesList.Count < 21)

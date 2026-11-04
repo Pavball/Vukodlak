@@ -38,8 +38,24 @@ public class Role : MonoBehaviour
       this.RoleIsDead = RoleIsDead;
     }
 
-    // Static constructor to initialize roleDictionary
-    static Role()
+    // Loaded on first use, not in a static constructor: Role is on a scene object, so a static
+    // constructor can run during scene load, when Resources.Load isn't allowed.
+    private static Dictionary<string, Role> loadedRoles;
+
+    // Dictionary to store role objects
+    public static Dictionary<string, Role> roleDictionary
+    {
+        get
+        {
+            if (loadedRoles == null)
+            {
+                loadedRoles = LoadRoles();
+            }
+            return loadedRoles;
+        }
+    }
+
+    private static Dictionary<string, Role> LoadRoles()
     {
         Color32 colorWhite = new Color32(255, 255, 255, 255);
         Color32 colorGreen = new Color32(31, 232, 30, 255);
@@ -52,7 +68,7 @@ public class Role : MonoBehaviour
         Color32 colorDarkBlue = new Color32(24, 29, 173, 255);
         Color32 colorPinkysh = new Color32(201, 119, 195, 255);
 
-        roleDictionary = new Dictionary<string, Role>()
+        var roles = new Dictionary<string, Role>()
         {
             {"Villager", new Role("Villager", "Village", "Villager has to help the village win!", "Goal: You win with the village. Lynch every other faction.", RoleTypeEnum.Good, colorGreen, false)},
             {"Werewolf", new Role("Werewolf", "Werewolf", "Decide with your team (or alone if you are the only werewolf alive) who will you kill each night.", "Goal: Kill all other factions except the witch and be the only faction alive.", RoleTypeEnum.Evil, colorBrown, false)},
@@ -65,16 +81,16 @@ public class Role : MonoBehaviour
             {"Serial Killer", new Role("Serial Killer", "Evil Killing", "Can kill one person each night. Is immune to werewolf attack.", "Goal: You win on your own. Lynch every other faction.", RoleTypeEnum.Neutral, colorDarkBlue, false)},
             {"Jester", new Role("Jester", "Evil Neutral", "Get yourself lynched by any means necessary.", "Goal: You win on your own. Lynch yourself.", RoleTypeEnum.Neutral, colorPinkysh, false)}
         };
-        var jsonRolesFromFile = DiskRoleLoader.LoadRolesFromFile();
-        var jsonRoles = CheckDuplicateRoles(jsonRolesFromFile, roleDictionary);
-        foreach (var role in jsonRoles)
+        foreach (var role in DiskRoleLoader.LoadRolesFromFile())
         {
-            roleDictionary.Add(role.RoleName, role);
+            if (!roles.TryAdd(role.RoleName, role))
+            {
+                Debug.LogWarning("Skipping duplicate role in roles.txt: " + role.RoleName);
+            }
         }
-    }
 
-    // Dictionary to store role objects
-    public static Dictionary<string, Role> roleDictionary;
+        return roles;
+    }
 
     // Method to get a role from the dictionary by its key
     public static Role GetRole(string key)
@@ -160,17 +176,6 @@ public class Role : MonoBehaviour
                 throw new ArgumentOutOfRangeException(nameof(playerCount), "Player count must be greater than 9 and lesser than 21.");
 
         }
-    }
-
-    private static List<Role> CheckDuplicateRoles(List<Role> jsonRolesFromFile, Dictionary<string, Role> preLoadedRoles)
-    {
-        foreach (var role in jsonRolesFromFile) {
-            if (preLoadedRoles.ContainsKey(role.RoleName))
-            {
-                jsonRolesFromFile.Remove(role);
-            }
-        }
-        return jsonRolesFromFile;
     }
 
 }

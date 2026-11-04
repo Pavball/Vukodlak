@@ -1,26 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using UnityEngine;
 
 public class DiskRoleLoader
 {
+    private const int LinesPerRole = 7;
+
     public static List<Role> LoadRolesFromFile()
     {
-        var filePath = Path.Combine(Application.dataPath, "roles.txt");
+        // Assets/Resources/roles.txt is packaged into builds, including Android
+        var rolesFile = Resources.Load<TextAsset>("roles");
 
-
-        if (!File.Exists(filePath))
+        if (rolesFile == null)
         {
-            FileStream file = File.Open(filePath, FileMode.Create);
-            file.Close();
+            Debug.LogWarning("Resources/roles.txt not found. Using built-in roles only.");
+            return new List<Role>();
         }
 
-        var textFromFile = File.ReadAllText(filePath);
-
-        List<Role> roles = CreateRolesFromText(textFromFile);
-
-        return roles;
+        return CreateRolesFromText(rolesFile.text);
     }
 
     private static List<Role> CreateRolesFromText(string textFromFile)
@@ -30,12 +28,30 @@ public class DiskRoleLoader
         // ignore first item because it is a description of the file contents
         for (int i = 1; i < roleList.Length; i++)
         {
-            if (roleList[i].Length >= 7)
+            var entry = roleList[i].Trim();
+            if (entry.Length == 0)
+            {
+                continue;
+            }
+
+            // A bad entry only loses that role, not every role in the game
+            try
             {
                 // Accept any line ending: git and other editors can change them in roles.txt
-                var item = roleList[i].Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                var role = new Role(item[1], item[2], item[3], item[4], getRoleType(item[5]), getColor(item[6]), getIsDead(item[7]));
-                roles.Add(role);
+                var item = entry.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+                    .Select(line => line.Trim())
+                    .ToArray();
+
+                if (item.Length < LinesPerRole)
+                {
+                    throw new FormatException("expected " + LinesPerRole + " lines, found " + item.Length);
+                }
+
+                roles.Add(new Role(item[0], item[1], item[2], item[3], getRoleType(item[4]), getColor(item[5]), getIsDead(item[6])));
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Skipping roles.txt entry " + i + ": " + e.Message);
             }
         }
         return roles;

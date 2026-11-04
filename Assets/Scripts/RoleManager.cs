@@ -31,10 +31,17 @@ public class RoleManager : MonoBehaviour
             // Get the Role component from the GameObject
             roleScript = roleObject.GetComponent<Role>();
 
+            // Fill the dropdown from the role list so roles.txt roles appear too
+            dropdownMenu.ClearOptions();
+            dropdownMenu.AddOptions(new List<string>(Role.roleDictionary.Keys));
+
             // Add listener for dropdown value changed event
             dropdownMenu.onValueChanged.AddListener(delegate {
                 DropdownValueChanged(dropdownMenu);
             });
+
+            // Show the first role straight away
+            DropdownValueChanged(dropdownMenu);
         }
         else
         {

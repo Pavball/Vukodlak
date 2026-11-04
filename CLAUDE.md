@@ -20,12 +20,13 @@ All scripts are in `Assets/Scripts`, in the global namespace. Each manager is a 
 | `GameManager` | `GameManager` | `GameController` | Switches UI panels through `ChangeToGamemodeUI(int)` |
 | `PhaseManager` | `PhaseManager` | `PhaseManager` | Day → Voting → Explanation → Night state machine, timers, votes needed |
 | `RoleDistribution` | `RoleDistributionManager` | `RoleDistribution` | Classic mode: uses presets for 10–20 players |
-| `CustomRoleManager` | `CustomRoleDistributionManager` | `CustomRoleManager` | Custom mode: narrator picks role counts for any player count |
+| `CustomRoleManager` | `CustomRoleDistributionManager` | `CustomRoleManager` | Custom mode: narrator picks role counts for 3 or more players |
 | `Role` | `Role` | `Role` | Role data, the static `roleDictionary`, presets by player count, shuffle |
 | `RoleManager` | `RoleDescriptionManager` | Untagged | Role encyclopedia screen |
 | `SettingsManager` | `SettingsManager` | `SettingsManager` | Timer dropdowns, saved to `PlayerPrefs` |
 | `PopupManager` | `PopupManager` | `PopupManager` | Animated error dialogs |
-| `Utils/DiskRoleLoader` | None (static) | | Loads extra roles from `Assets/roles.txt` |
+| `Utils/DiskRoleLoader` | None (static) | | Loads extra roles from `Assets/Resources/roles.txt` |
+| `Utils/PlayerNames` | None (static) | | Parses the name list and finds duplicates for both game modes |
 
 ## How things connect
 
@@ -45,7 +46,8 @@ All scripts are in `Assets/Scripts`, in the global namespace. Each manager is a 
 | 10 / 11 | Game info open / close |
 | 12 | Settings |
 
-- **Custom game start:** `GeneratePlayerTableBTN` runs three Inspector calls in order: `CustomRoleManager.RandomizeRoles`, `GameManager.ChangeToGamemodeUI(8)`, `PhaseManager.InitializeGame`.
+- **Game start:** both modes open the game table from code, with `ChangeToGamemodeUI(8)` then `PhaseManager.InitializeGame`. Classic does this in `RoleDistribution.GenerateRoles`, Custom in `CustomRoleManager.RandomizeRoles`, which is called by `GeneratePlayerTableBTN`.
+- **Player names:** kept as typed, apart from surrounding spaces. Duplicates are matched ignoring case.
 - **The alive and dead lists are the game state:** a player is an instantiated `V2NameRolePrefab` parented to the alive or graveyard scroll view content. Counts and votes needed come from `childCount`. Votes needed is `ceil(alive / 2)`.
 - **Timers use `Invoke`:** `_tick` and `_explanationTick` reschedule themselves. They are called by string name, so renaming them needs the string updated as well.
 
@@ -53,22 +55,18 @@ All scripts are in `Assets/Scripts`, in the global namespace. Each manager is a 
 
 Roles come from two places:
 
-1. The hardcoded dictionary in the static `Role` constructor. New built-in roles go here.
-2. `Assets/roles.txt`, loaded by `DiskRoleLoader`. Each entry is separated by `##` and has 7 lines: Name, Faction, Description, Goal, Type (`Good`/`Evil`/`Neutral`), Color (`R,G,B,A`), IsDead. The first block is a description of the format and is skipped.
+1. The hardcoded dictionary in `Role.LoadRoles`. New built-in roles go here.
+2. `Assets/Resources/roles.txt`, loaded by `DiskRoleLoader`. Each entry is separated by `##` and has 7 lines: Name, Faction, Description, Goal, Type (`Good`/`Evil`/`Neutral`), Color (`R,G,B,A`), IsDead. The first block is a description of the format and is skipped.
 
-To add a built-in role, also update the preset lists in `Role.FetchPresetByPlayerCount` if it belongs in Classic mode, and the options of `RoleSelectorDropdown` in the scene. That dropdown is hardcoded, so `roles.txt` roles never appear in it.
+The file ships inside the build, so players can't edit it on their phones. A malformed entry or a duplicate role name is skipped with a console warning. Any line ending works.
+
+Roles load the first time `Role.roleDictionary` is read, not in a static constructor, because `Resources.Load` isn't allowed during scene load. `RoleSelectorDropdown` is filled from this dictionary at runtime. To add a built-in role to Classic mode, also update the preset lists in `Role.FetchPresetByPlayerCount`.
 
 ## Known issues
 
 Found by reading the code, not yet reproduced:
 
-- **`roles.txt` on Android:** the loader reads from `Application.dataPath`, which is inside the APK on Android, and the file isn't packaged into builds. Creating it there is likely to throw in the same static constructor. Use `Resources`, `StreamingAssets`, or `persistentDataPath` instead.
-- **`Role.CheckDuplicateRoles` removes items from the list it is looping over**, which throws if `roles.txt` contains a duplicate of a built-in role.
-- **`Role` is a `MonoBehaviour` created with `new`.** Unity warns on every instance, and it should become a plain class or `ScriptableObject`.
-- **`RoleDistribution.GenerateRoles` clears the alive list twice and never clears the graveyard.** It's a copy-paste slip, currently masked because the Back button clears both.
-- **Custom mode has no player count validation**, unlike Classic mode's 10–20 limit.
-- **Classic mode lowercases player names; Custom mode doesn't.**
-- **`ButtonToTestDictionary` (inactive) points at `CustomRoleManager.ReadDictionary`**, which is commented out.
+- **`Role` is a `MonoBehaviour` created with `new`.** Unity warns on every instance, and it should become a plain class or `ScriptableObject`. These objects compare equal to `null` in Unity, so never null-check a `Role`.
 - **`PhaseManager.InitializeGame` sets `dayCounter = 1`, while `ResetGame` sets it to 0.** Check both paths when changing day numbering.
 
 Naming oddities to keep as they are unless deliberately migrating:
@@ -78,7 +76,7 @@ Naming oddities to keep as they are unless deliberately migrating:
 
 ## Repository state
 
-- **Unity upgrade in progress:** `main` is on 2022.3.10f1, and the working tree holds an uncommitted upgrade to 6000.6.8f1 (`Packages/`, `ProjectSettings/`, many TextMesh Pro files). Keep unrelated changes out of that diff.
+- **Unity upgrade in progress:** `main` is on 2022.3.10f1, and the working tree holds an uncommitted upgrade to 6000.6.8f1 (`Packages/`, `ProjectSettings/`, many TextMesh Pro files). Keep unrelated changes out of that diff. Saving `SampleScene.unity` on Unity 6 rewrites much of the file, so small scene edits show large diffs.
 - **Android Gradle templates predate the upgrade:** `Assets/Plugins/Android/*.gradle` hardcode compile SDK 33 and target SDK 33, while Player Settings says target 32. Android builds on Unity 6 haven't been verified.
 - **`user.keystore` is tracked in git.** Never print, move, or modify it.
 - **`.roles.txt` at the repo root is an empty tracked file.** The loader doesn't use it.
@@ -88,5 +86,6 @@ Naming oddities to keep as they are unless deliberately migrating:
 - **Use the Unity MCP connection** to read the console, inspect the scene, and run editor commands. The editor must be open with this project loaded.
 - **Don't hand-edit `.unity`, `.prefab`, or `.asset` YAML.** Change them through the editor or Unity MCP so references stay intact.
 - **Keep `.meta` files with their assets** when adding, moving, or deleting files. Let Unity generate them.
-- **Static initialisation failures poison the type** until the next domain reload, so one bad `roles.txt` entry disables every role until scripts reload.
+- **Editing a script drops the Unity MCP connection** while the editor recompiles. Wait for the editor to finish before calling Unity tools again.
+- **Roles are cached after first use,** so `roles.txt` changes need a domain reload to show up.
 - **Builds are done from the Unity Editor** (Build Profiles). There is no CLI build or CI. Android signing needs the keystore passwords, which aren't stored in the project.
