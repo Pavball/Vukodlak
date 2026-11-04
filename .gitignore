@@ -73,3 +73,7 @@ crashlytics-build.properties
 
 # Temporary files from Android builds
 /.utmp/
+
+# Signing keys
+*.keystore
+*.jks

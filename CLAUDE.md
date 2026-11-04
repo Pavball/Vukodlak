@@ -78,7 +78,7 @@ Naming oddities to keep as they are unless deliberately migrating:
 
 - **`Assets/TextMesh Pro/Examples & Extras` isn't in git.** Nothing in the project uses it, so keep it out of commits.
 - **Android build status:** a debug-signed APK builds on Unity 6 in about 13 minutes on a clean build, and was tested on an Android 16 phone with both game modes working. A build signed with `user.keystore` hasn't been tried.
-- **`user.keystore` is tracked in git.** Never print, move, or modify it.
+- **`user.keystore` isn't in the working tree or tracked any more,** but it remains in the public git history, so its password is its only protection. Key files are ignored by `.gitignore`. Never print, move, or modify a keystore, and never commit one. Player Settings still expects `user.keystore` in the project root, so signed builds need that path fixed or an ignored local copy there.
 - **`.roles.txt` at the repo root is an empty tracked file.** The loader doesn't use it.
 
 ## Working in this project
