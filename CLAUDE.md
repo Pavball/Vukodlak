@@ -76,7 +76,7 @@ Naming oddities to keep as they are unless deliberately migrating:
 
 ## Repository state
 
-- **Unity upgrade in progress:** `main` is on 2022.3.10f1, and the working tree holds an uncommitted upgrade to 6000.6.8f1 (`Packages/`, `ProjectSettings/`, many TextMesh Pro files). Keep unrelated changes out of that diff. Saving `SampleScene.unity` on Unity 6 rewrites much of the file, so small scene edits show large diffs.
+- **`Assets/TextMesh Pro/Examples & Extras` isn't in git.** Nothing in the project uses it, so keep it out of commits.
 - **Android Gradle templates predate the upgrade:** `Assets/Plugins/Android/*.gradle` hardcode compile SDK 33 and target SDK 33, while Player Settings says target 32. Android builds on Unity 6 haven't been verified.
 - **`user.keystore` is tracked in git.** Never print, move, or modify it.
 - **`.roles.txt` at the repo root is an empty tracked file.** The loader doesn't use it.
